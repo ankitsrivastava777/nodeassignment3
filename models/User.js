@@ -24,7 +24,7 @@ var usersprofile_schema = mongoose.Schema(
 },
   {
     strict: true,
-    collection: "newuserdata",
+    collection: "user_details",
   }
 );
 var access_token = mongoose.Schema(
@@ -71,7 +71,7 @@ var user_address = mongoose.Schema(
     userdata: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "newuserdata",
+        ref: "user_details",
       },
     ],
   },
@@ -80,7 +80,7 @@ var user_address = mongoose.Schema(
     collection: "user_address",
   }
 );
-var user = conn.model("newuserdata", usersprofile_schema);
+var user = conn.model("user_details", usersprofile_schema);
 var AccessToken = conn.model("access_roken", access_token);
 var user_address = conn.model("User_address", user_address);
 

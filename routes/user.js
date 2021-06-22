@@ -20,12 +20,16 @@ app.post("/user/register", async function (req, res) {
   } else {
     const user_post = new user({
       username: req.body.username,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
       password: userPassword,
       email: req.body.email,
     });
     user_post.save(function (err, row) {
       if (err) {
-        console.log(err);
+        res.status(500).json({
+          message: "user not saved",
+        });
       } else {
         res.status(200).json({
           message: "saved  successfully",
@@ -56,7 +60,9 @@ app.post("/user/login", async function (req, res) {
           });
           token_save.save(function (err) {
             if (err) {
-              console.log(err);
+              res.status(500).json({
+                message: "token not saved",
+              });
               process.exit();
             }
             res.header("token", tokenId);
@@ -73,12 +79,11 @@ app.post("/user/login", async function (req, res) {
 });
 
 app.get("/user/get", auth, async function (req, res) {
-  user_address
-    .findOne({ user_id: req.user.user_id })
-    .populate("userdata")
-    .then((user) => {
-      res.json(user);
-    });
+  res.json({
+    id: req.user._id,
+    username: req.user.username,
+    email: req.user.email,
+  });
 });
 
 app.put("/user/delete/", auth, async function (req, res) {
@@ -96,20 +101,22 @@ app.put("/user/delete/", auth, async function (req, res) {
   });
 });
 
-app.get("/user/list/:id/:page", function (req, res) {
-  page = Number(req.params.page);
-  if (req.params.id == 1) {
+app.get("/user/list/:users/:page", function (req, res) {
+  pages_number = Number(req.params.page);
+  if (req.params.users == 1) {
     skip = 0;
   } else {
-    var skip = req.params.id * 10 - 10;
+    var skip_user_list = req.params.users * 10 - 10;
   }
   user
     .find()
-    .skip(skip)
-    .limit(page)
-    .exec(function (err, result) {
+    .skip(skip_user_list)
+    .limit(pages_number)
+    .exec(function (err, userData) {
       if (err) {
-        res.send(err);
+        res.status(500).json({
+          message: 'no data found',
+        });
       }
       res.send(result);
     });
@@ -131,7 +138,9 @@ app.post("/user/address", auth, async function (req, res) {
   });
   address_post.save(function (err) {
     if (err) {
-      console.log(err);
+      res.status(500).json({
+        message: 'address not saved',
+      });
       process.exit();
     }
     res.status(200).json({
