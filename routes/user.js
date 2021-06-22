@@ -7,7 +7,10 @@ const bcrypt = require("bcrypt");
 var cookieParser = require("cookie-parser");
 var { auth } = require("../config/auth");
 var { conn } = require("../config/db");
-var { user, AccessToken, user_address } = require("../models/User");
+var { user } = require("../models/User");
+var { AccessToken } = require("../models/AccessToken");
+var { user_address } = require("../models/UserAddress");
+
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 app.use(express.json());
 

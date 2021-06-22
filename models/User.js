@@ -27,63 +27,7 @@ var usersprofile_schema = mongoose.Schema(
     collection: "user_details",
   }
 );
-var access_token = mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
-      unique: true,
-    },
-    access_token: {
-      type: String,
-    },
-    expiry: {
-      type: Date,
-      expires: "60s",
-      default: Date.now,
-    },
-  },
-  {
-    strict: true,
-    collection: "access_token",
-  }
-);
-var user_address = mongoose.Schema(
-  {
-    user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-    },
-    address: {
-      type: String,
-    },
-    city: {
-      type: String,
-    },
-    state: {
-      type: String,
-    },
-    pin_code: {
-      type: String,
-    },
-    phone_no: {
-      type: String,
-    },
-    userdata: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "user_details",
-      },
-    ],
-  },
-  {
-    strict: true,
-    collection: "user_address",
-  }
-);
+
 var user = conn.model("user_details", usersprofile_schema);
-var AccessToken = conn.model("access_roken", access_token);
-var user_address = conn.model("User_address", user_address);
 
 exports.user = user;
-exports.AccessToken = AccessToken;
-exports.user_address = user_address;
