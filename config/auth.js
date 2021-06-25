@@ -1,7 +1,4 @@
-var {conn} = require("../config/db");
-var { user } = require("../models/User");
 var { AccessToken } = require("../models/AccessToken");
-var { user_address } = require("../models/UserAddress");
 
 var auth = async function authenticateToken(req, res, next) {
     var user_id = req.headers.token;
@@ -11,7 +8,9 @@ var auth = async function authenticateToken(req, res, next) {
             next();
         } else {
             res.status(500).json({
-                message: "user not found",
+                error: 1,
+                message: err,
+                data: null
             });
         }
     });

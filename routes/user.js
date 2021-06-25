@@ -1,25 +1,21 @@
 var express = require("express");
-var mongoose = require("mongoose");
 var passwordHash = require("password-hash");
 var app = express();
-var bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
-var cookieParser = require("cookie-parser");
 var { auth } = require("../config/auth");
-var { conn } = require("../config/db");
 var { user } = require("../models/User");
 var { AccessToken } = require("../models/AccessToken");
-var { user_address } = require("../models/UserAddress");
 
-var urlencodedParser = bodyParser.urlencoded({ extended: false });
-app.use(express.json());
-
-app.post("/user/register", async function (req, res) {
+app.post("/register", async function (req, res) {
   const salt = await bcrypt.genSalt();
   const userPassword = await bcrypt.hash(req.body.password, salt);
 
   if (req.body.password !== req.body.confirmpassword) {
-    res.send("password not match");
+    res.status(500).json({
+      error: 1,
+      message: "password not matched",
+      data: null,
+    });
   } else {
     const user_post = new user({
       username: req.body.username,
@@ -31,20 +27,25 @@ app.post("/user/register", async function (req, res) {
     user_post.save(function (err, row) {
       if (err) {
         res.status(500).json({
-          message: "user not saved",
+          error: 1,
+          message: err.message,
+          data: null,
         });
-      } else {
+      } 
+      else {
         res.status(200).json({
-          message: "saved  successfully",
+          error: 0,
+          message: "saved successfully",
+          data: null,
         });
       }
     });
   }
 });
 
-app.post("/user/login", async function (req, res) {
-  user.find({ username: req.body.username }, async function (err, results) {
-    var pass = results.password;
+app.post("/login", async function (req, res) {
+  user.findOne({ username: req.body.username }, async function (err, results) {
+    var pass = results.password.toString();
     var userId = results._id;
     var input_password = pass.toString();
     var user_password = req.body.password;
@@ -53,8 +54,10 @@ app.post("/user/login", async function (req, res) {
       const pwd = passwordHash.generate(req.body.password);
       AccessToken.findOne({ user_id: userId }, function (err, userDetails) {
         if (userDetails && userDetails._id) {
-          res.status(200).json({
-            message: "Already login",
+          res.status(500).json({
+            error: 1,
+            message: "already login",
+            data: null,
           });
         } else {
           var token_save = new AccessToken({
@@ -63,54 +66,65 @@ app.post("/user/login", async function (req, res) {
           });
           token_save.save(function (err) {
             if (err) {
-              res.status(500).json({
+              res.status(200).json({
+                error: 1,
                 message: "token not saved",
+                data: null,
               });
-              process.exit();
             }
-            res.header("token", tokenId);
-            res.status(200).json({ token: tokenId });
+            res.status(200).json({
+              error: 0,
+              message: "token saved",
+              data: tokenId,
+            });
           });
         }
       });
     } else {
       res.status(500).json({
-        message: "No user found",
+        error: 1,
+        message: "no user found",
+        data: null,
       });
     }
   });
 });
 
-app.get("/user/get", auth, async function (req, res) {
-  res.json({
-    id: req.user._id,
-    username: req.user.username,
-    email: req.user.email,
+app.get("/get", auth, async function (req, res) {
+  res.status(200).json({
+    error: 0,
+    message: "user list",
+    data: {
+      id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+    },
   });
 });
 
-app.put("/user/delete/", auth, async function (req, res) {
+app.put("/delete/", auth, async function (req, res) {
   var user_id = req.user.user_id;
   await user.deleteOne({ _id: user_id }, function (err, results) {
     if (err) {
-      res.status(501).json({
-        message: "no user matched",
+      res.status(500).json({
+        error: 1,
+        message: err.message,
+        data: null,
       });
     } else {
       res.status(200).json({
-        message: "User deleted",
+        error: 0,
+        message: "user deleted",
+        data: null,
       });
     }
   });
 });
 
-app.get("/user/list/:users/:page", function (req, res) {
+app.get("/list/:limit/:page", function (req, res) {
   pages_number = Number(req.params.page);
-  if (req.params.users == 1) {
-    skip = 0;
-  } else {
-    var skip_user_list = req.params.users * 10 - 10;
-  }
+  limit = req.params.limit;
+  var skip_user_list = limit * pages_number - pages_number;
   user
     .find()
     .skip(skip_user_list)
@@ -118,36 +132,43 @@ app.get("/user/list/:users/:page", function (req, res) {
     .exec(function (err, userData) {
       if (err) {
         res.status(500).json({
-          message: 'no data found',
+          message: "no data found",
         });
       }
-      res.send(result);
+      res.status(200).json({
+        error: 0,
+        message: "user list",
+        data: userData,
+      });
     });
 });
 
-app.post("/user/address", auth, async function (req, res) {
+app.post("/address", auth, async function (req, res) {
   var userId = req.user.user_id;
   var address = req.body.address;
   var city = req.body.city;
   var state = req.body.state;
   var pin_code = req.body.pin_code;
   var phone_no = req.body.phone_no;
-  var address_post = new user_address({
+  var user_address = new user_address({
     user_id: userId,
     city: city,
     state: state,
     pin_code: pin_code,
     phone_no: phone_no,
   });
-  address_post.save(function (err) {
+  user_address.save(function (err) {
     if (err) {
       res.status(500).json({
-        message: 'address not saved',
+        error: 1,
+        message: err.message,
+        data: null,
       });
-      process.exit();
     }
     res.status(200).json({
-      message: "Address Saved",
+      error: 0,
+      message: "address saved",
+      data: null,
     });
   });
 });

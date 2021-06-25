@@ -23,4 +23,6 @@ var access_token = mongoose.Schema(
     }
   );
 
+  var AccessToken = conn.model("access_roken", access_token);
+
   exports.AccessToken = AccessToken;
