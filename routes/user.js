@@ -31,8 +31,7 @@ app.post("/register", async function (req, res) {
           message: err.message,
           data: null,
         });
-      } 
-      else {
+      } else {
         res.status(200).json({
           error: 0,
           message: "saved successfully",
@@ -113,8 +112,8 @@ app.put("/delete/", auth, async function (req, res) {
 });
 
 app.get("/list/:limit/:page", function (req, res) {
-  pages_number = Number(req.params.page);
-  limit = req.params.limit;
+  var pages_number = Number(req.params.page);
+  var limit = req.params.limit;
   var skip_user_list = limit * pages_number - pages_number;
   user
     .find()
@@ -122,8 +121,10 @@ app.get("/list/:limit/:page", function (req, res) {
     .limit(pages_number)
     .exec(function (err, userData) {
       if (err) {
-        res.status(500).json({
-          message: "no data found",
+        res.status(501).json({
+          error: 0,
+          message: err.message,
+          data: userData,
         });
       }
       res.status(200).json({
@@ -144,7 +145,7 @@ app.post("/address", auth, async function (req, res) {
   var user_address = new user_address({
     user_id: userId,
     city: city,
-    address:address,
+    address: address,
     state: state,
     pin_code: pin_code,
     phone_no: phone_no,
