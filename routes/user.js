@@ -49,15 +49,15 @@ app.post("/login", async function (req, res) {
     var userId = results._id;
     var input_password = pass.toString();
     var user_password = req.body.password;
-    var tokenId = userId.toString();
+    var token = userId.toString();
     if (await bcrypt.compare(user_password, input_password)) {
       const pwd = passwordHash.generate(req.body.password);
-      AccessToken.findOne({ user_id: userId }, function (err, userDetails) {
-        if (userDetails && userDetails._id) {
+      AccessToken.findOne({ user_id: userId }, function (err, userToken) {
+        if (userToken && userToken._id) {
           res.status(500).json({
             error: 1,
             message: "already login",
-            data: null,
+            data: token,
           });
         } else {
           var token_save = new AccessToken({
@@ -66,7 +66,7 @@ app.post("/login", async function (req, res) {
           });
           token_save.save(function (err) {
             if (err) {
-              res.status(200).json({
+              res.status(500).json({
                 error: 1,
                 message: "token not saved",
                 data: null,
@@ -75,7 +75,7 @@ app.post("/login", async function (req, res) {
             res.status(200).json({
               error: 0,
               message: "token saved",
-              data: tokenId,
+              data: token,
             });
           });
         }
@@ -104,20 +104,11 @@ app.get("/get", auth, async function (req, res) {
 
 app.put("/delete/", auth, async function (req, res) {
   var user_id = req.user.user_id;
-  await user.deleteOne({ _id: user_id }, function (err, results) {
-    if (err) {
-      res.status(500).json({
-        error: 1,
-        message: err.message,
-        data: null,
-      });
-    } else {
-      res.status(200).json({
-        error: 0,
-        message: "user deleted",
-        data: null,
-      });
-    }
+  await user.deleteOne({ _id: user_id });
+  res.status(200).json({
+    error: 0,
+    message: "user deleted",
+    data: null,
   });
 });
 
@@ -153,6 +144,7 @@ app.post("/address", auth, async function (req, res) {
   var user_address = new user_address({
     user_id: userId,
     city: city,
+    address:address,
     state: state,
     pin_code: pin_code,
     phone_no: phone_no,

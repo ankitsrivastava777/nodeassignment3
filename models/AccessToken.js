@@ -13,7 +13,7 @@ var access_token = mongoose.Schema(
       },
       expiry: {
         type: Date,
-        expires: "60s",
+        expires: "600s",
         default: Date.now,
       },
     },
